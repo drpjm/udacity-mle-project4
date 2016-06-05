@@ -92,8 +92,30 @@ Patrick Martin \\
 
 \vspace{1em}
 
+In this project, I applied reinforcement learning techniques to design and simulate a smart cab agent operating.
 
+\subsection*{Testing and Design Tasks}
 
+To ensure that my development environment was complete, I implemented an agent that randomly selects an action without any ``smarts.'' 
+This agent uses a discrete uniform distribution over the four possible actions: \verb|None|, \verb|left|, \verb|right|, and \verb|forward|.
+It is clear from this strategy that the agent will bounce around the board due to the randomness of its action selection and the randomness of the environment (traffic lights and other agents).
+The agent usually arrives at the final goal; however, there is no guarantee on timing performance. 
+I let the agent run five times and tabulated the simulation deadline and the number of steps to completion:
 
+\begin{center}
+    \begin{tabular}{| c | c |}
+    \hline
+    \textbf{Deadline} & \textbf{Steps to Completion} \\ \hline
+    20 & 168 \\ \hline
+    40 & 120 \\ \hline
+    25 & 7 \\ \hline
+    30 & 22 \\ \hline
+    40 & 118 \\
+    \hline
+    \end{tabular}
+\end{center}
+
+Two out of the five runs completed before the deadline, but it is likely due to the right combinations of initial conditions.
+An open-loop algorithm will clearly not work for this task.
 
 \end{document}
