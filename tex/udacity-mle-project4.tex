@@ -116,6 +116,20 @@ I let the agent run five times and tabulated the simulation deadline and the num
 \end{center}
 
 Two out of the five runs completed before the deadline, but it is likely due to the right combinations of initial conditions.
-An open-loop algorithm will clearly not work for this task.
+An open-loop algorithm will clearly not work for this task. \\
+
+The driving agent's state should be made up of elements in the environment that can facilitate proper decision making.
+Additionally, the agent might benefit from memory of its prior actions.
+My agent state will use a dictionary data structure with the following items:
+\begin{itemize}
+%	\item \verb|prior_action| - action chosen by the agent at the prior time tick
+	\item \verb|light| - the state of the traffic light at the intersection, red or green.
+	\item \verb|oncoming|, \verb|left|, \verb|right| - indicates if there is traffic oncoming, left, or right, respectively.
+	\item \verb|next_waypoint| - the agent's next goal waypoint
+	\item \verb|deadline| - the amount of time left for the deadline
+\end{itemize}
+The input data, the light and directional measurements, provide the agent knowledge about the intersection.
+For example, if the light is red, a smart agent should exclude the \verb|forward| action!
+The next waypoint and deadline state values will be needed to help evolve the system learning, since they are related to higher level goals.
 
 \end{document}
