@@ -9,10 +9,16 @@ class LearningAgent(Agent):
     def __init__(self, env):
         super(LearningAgent, self).__init__(env)  # sets self.env = env, state = None, next_waypoint = None, and a default color
         self.color = 'red'  # override color
+        self.eps = 0.2 # some % of the time, choose a random action
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
-        # State is a dictionary
-        self.state = {}
-        # self.state = {'prior_action' : None}
+        self.possible_actions = [None, 'forward', 'left', 'right']
+        self.possbible_states = ['red', 'green']
+        self.qtable = {}
+        # Init the qtable values to 0
+        for s in self.possbible_states:
+            for a in self.possible_actions:
+                self.qtable[(s,a)] = 0.0
+
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
@@ -23,28 +29,30 @@ class LearningAgent(Agent):
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
         deadline = self.env.get_deadline(self)
-        self.state['deadline'] = deadline
-        self.state['next_waypoint'] = self.next_waypoint
-        # Throw in all of the input values for now: light, oncoming, left, right
-        for key in inputs:
-            self.state[key] = inputs[key]
+        # State update:
+        self.state = inputs['light'];
 
-        print "State: "
-        print self.state
-
-        # Update state from input data.
-
-        # TODO: Select action according to your policy
         # First: random action selection:
-        possible_actions = [None, 'forward', 'left', 'right']
         rand_action_idx = random.randint(0,3)
-        action = possible_actions[rand_action_idx]
-        # self.state['prior_action'] = action
+        action = self.possible_actions[rand_action_idx]
 
         # Execute action and get reward
         reward = self.env.act(self, action)
+        # Update the qtable accordingly
+        sa_pair = (self.state, action)
+        print "Qtable entry before: "
+        print self.qtable[sa_pair]
+        print "Qtable entry after: "
+        self.qtable[sa_pair] = reward
+        print self.qtable[sa_pair]
 
         # TODO: Learn policy based on state, action, reward
+        roll = random.random();
+        print roll
+        if roll < self.eps:
+            print "* Choose random action."
+        else:
+            print "* Q learning policy."
 
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
