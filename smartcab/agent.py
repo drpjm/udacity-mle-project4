@@ -1,5 +1,6 @@
 import random
 import math
+import itertools as iters
 import numpy as np
 from environment import Agent, Environment
 from planner import RoutePlanner
@@ -15,7 +16,11 @@ class LearningAgent(Agent):
         self.eps = 1 # some % of the time, choose a random action
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         self.possible_actions = [None, 'forward', 'left', 'right']
-        self.possbible_states = ['red', 'green']
+        # self.possbible_states = ['red', 'green']
+        # Just an indicator of traffic: true or false.
+        self.possbible_states = list(iters.product(['red','green'],[True,False]))
+        # All three pathways.
+        # self.possbible_states = list(iters.product(['red','green'],[True,False],[True,False],[True,False]))
         self.gamma = 0.5 # Discount factor
         self.curr_action = None
         self.qtable = {}
@@ -28,9 +33,11 @@ class LearningAgent(Agent):
     def reset(self, destination=None):
         self.planner.route_to(destination)
         self.trial_num += 1
-        self.eps = 1.0 / self.trial_num
-        print "TRIAL {}, eps={}".format(self.trial_num, self.eps)
+        # self.eps = 1.0 / math.sqrt(self.trial_num)
+        self.eps -= 0.005
+        print "*** TRIAL {}, eps={}".format(self.trial_num, self.eps)
         # print self.eps
+        print self.qtable
 
     def update(self, t):
         # SENSE
@@ -38,11 +45,11 @@ class LearningAgent(Agent):
         inputs = self.env.sense(self)
         deadline = self.env.get_deadline(self)
         alpha = 1.0 / (t + 1)
-        print alpha
+        # print alpha
         # State update:
-        self.state = inputs['light']
-        print "*** Agent state = "
-        print self.state
+        self.state = update_state_min(inputs)
+
+        # print "*** Agent state = {}".format(self.state)
 
         # First: random action selection:
         # rand_action_idx = random.randint(0,3)
@@ -59,7 +66,7 @@ class LearningAgent(Agent):
             for i in range(0, len(self.possible_actions)):
                 qVals[i] = self.qtable[(self.state, self.possible_actions[i])]
             action_idx = np.argmax(qVals)
-            print "== Greedy move: {}".format(self.possible_actions[action_idx])
+            # print "== Greedy move: {}".format(self.possible_actions[action_idx])
             self.curr_action = self.possible_actions[action_idx]
 
         # Execute action and get reward
@@ -67,8 +74,8 @@ class LearningAgent(Agent):
         # print "*** Agent reward = {}".format(reward)
 
         # Update state *after* the action.
-        new_inputs = self.env.sense(self)
-        new_state = new_inputs['light']
+        new_state = update_state_min(self.env.sense(self))
+
         # Update the qtable accordingly
         sa_pair = (self.state, self.curr_action)
         # Q-table UPDATE
@@ -80,8 +87,37 @@ class LearningAgent(Agent):
         maxNextQ = np.amax(qVals)
         self.qtable[sa_pair] = (1-alpha)*currQ + alpha*(reward + self.gamma*maxNextQ)
 
-        print self.qtable
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, self.curr_action, reward)  # [debug]
+        # print self.qtable
+        # print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, self.curr_action, reward)  # [debug]
+
+def update_state_min(inputs_dict):
+        new_light = inputs_dict['light']
+        has_traffic = False
+        if inputs_dict['oncoming'] != None:
+            has_traffic = True
+        if inputs_dict['left'] != None:
+            has_traffic = True
+        if inputs_dict['right'] != None:
+            has_traffic = True
+
+        return (new_light, has_traffic)
+
+def update_state(inputs_dict):
+        new_light = inputs_dict['light']
+        new_oncoming = False
+        new_left = False
+        new_right = False
+        if inputs_dict['oncoming'] != None:
+            new_oncoming = True
+        if inputs_dict['left'] != None:
+            new_left = True
+        if inputs_dict['right'] != None:
+            new_right = True
+
+        return (new_light, new_oncoming, new_left, new_right)
+
+def get_qtable(self):
+    return self.qtable
 
 def run():
     """Run the agent for a finite number of trials."""
@@ -92,9 +128,8 @@ def run():
     e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.5)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=20)  # press Esc or close pygame window to quit
-
+    sim = Simulator(e, update_delay=0.01)  # reduce update_delay to speed up simulation
+    sim.run(n_trials=100)  # press Esc or close pygame window to quit
 
 if __name__ == '__main__':
     run()
