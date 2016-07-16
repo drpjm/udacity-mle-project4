@@ -16,12 +16,13 @@ class LearningAgent(Agent):
         self.eps = 1 # some % of the time, choose a random action
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         self.possible_actions = [None, 'forward', 'left', 'right']
+
         # self.possbible_states = ['red', 'green']
         # Just an indicator of traffic: true or false.
-        self.possbible_states = list(iters.product(['red','green'],[True,False]))
+        # self.possbible_states = list(iters.product(['red','green'],[True,False]))
         # All three pathways.
-        # self.possbible_states = list(iters.product(['red','green'],[True,False],[True,False],[True,False]))
-        self.gamma = 0.5 # Discount factor
+        self.possbible_states = list(iters.product(['red','green'],[True,False],[True,False],[True,False]))
+        self.gamma = 0.25 # Discount factor
         self.curr_action = None
         self.qtable = {}
         # Init the qtable values to 0
@@ -33,11 +34,11 @@ class LearningAgent(Agent):
     def reset(self, destination=None):
         self.planner.route_to(destination)
         self.trial_num += 1
-        # self.eps = 1.0 / math.sqrt(self.trial_num)
-        self.eps -= 0.005
+        self.eps = 1.0 / math.sqrt(self.trial_num)
+        # self.eps -= 0.005
         print "*** TRIAL {}, eps={}".format(self.trial_num, self.eps)
-        # print self.eps
-        print self.qtable
+        # print self.qtable
+        # print_qtable(self.qtable)
 
     def update(self, t):
         # SENSE
@@ -47,7 +48,8 @@ class LearningAgent(Agent):
         alpha = 1.0 / (t + 1)
         # print alpha
         # State update:
-        self.state = update_state_min(inputs)
+        # self.state = update_state_min(inputs)
+        self.state = update_state_fine(inputs)
 
         # print "*** Agent state = {}".format(self.state)
 
@@ -74,7 +76,8 @@ class LearningAgent(Agent):
         # print "*** Agent reward = {}".format(reward)
 
         # Update state *after* the action.
-        new_state = update_state_min(self.env.sense(self))
+        # new_state = update_state_coarse(self.env.sense(self))
+        new_state = update_state_fine(self.env.sense(self))
 
         # Update the qtable accordingly
         sa_pair = (self.state, self.curr_action)
@@ -90,7 +93,7 @@ class LearningAgent(Agent):
         # print self.qtable
         # print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, self.curr_action, reward)  # [debug]
 
-def update_state_min(inputs_dict):
+def update_state_coarse(inputs_dict):
         new_light = inputs_dict['light']
         has_traffic = False
         if inputs_dict['oncoming'] != None:
@@ -102,7 +105,7 @@ def update_state_min(inputs_dict):
 
         return (new_light, has_traffic)
 
-def update_state(inputs_dict):
+def update_state_fine(inputs_dict):
         new_light = inputs_dict['light']
         new_oncoming = False
         new_left = False
@@ -118,6 +121,12 @@ def update_state(inputs_dict):
 
 def get_qtable(self):
     return self.qtable
+
+def print_qtable(qtable):
+    qtableStr = ""
+    for k,v in qtable.iteritems():
+        qtableStr += "{:<20} {:<20}\n".format(k, v)
+    print qtableStr
 
 def run():
     """Run the agent for a finite number of trials."""
