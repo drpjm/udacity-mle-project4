@@ -101,9 +101,9 @@ class Simulator(object):
                 finally:
                     if self.quit or self.env.done:
                         break
-
             if self.quit:
                 break
+        print "Success Rate = {}".format(self.env.get_num_successes() / float(n_trials)) 
 
     def render(self):
         # Clear screen

@@ -2,6 +2,8 @@ import time
 import random
 from collections import OrderedDict
 
+import numpy as np
+
 from simulator import Simulator
 
 class TrafficLight(object):
@@ -32,6 +34,8 @@ class Environment(object):
     hard_time_limit = -100  # even if enforce_deadline is False, end trial when deadline reaches this value (to avoid deadlocks)
 
     def __init__(self):
+        self.agent_successes = []
+
         self.done = False
         self.t = 0
         self.agent_states = OrderedDict()
@@ -121,6 +125,7 @@ class Environment(object):
                 print "Environment.step(): Primary agent hit hard time limit ({})! Trial aborted.".format(self.hard_time_limit)
             elif self.enforce_deadline and agent_deadline <= 0:
                 self.done = True
+                self.agent_successes.append(0)
                 print "Environment.step(): Primary agent ran out of time! Trial aborted."
             self.agent_states[self.primary_agent]['deadline'] = agent_deadline - 1
 
@@ -204,6 +209,7 @@ class Environment(object):
                 if state['deadline'] >= 0:
                     reward += 10  # bonus
                 self.done = True
+                self.agent_successes.append(1)
                 print "Environment.act(): Primary agent has reached destination!"  # [debug]
             self.status_text = "state: {}\naction: {}\nreward: {}".format(agent.get_state(), action, reward)
             #print "Environment.act() [POST]: location: {}, heading: {}, action: {}, reward: {}".format(location, heading, action, reward)  # [debug]
@@ -213,6 +219,10 @@ class Environment(object):
     def compute_dist(self, a, b):
         """L1 distance between two points."""
         return abs(b[0] - a[0]) + abs(b[1] - a[1])
+
+    def get_num_successes(self):
+        success_array = np.array(self.agent_successes)
+        return np.count_nonzero(success_array)
 
 
 class Agent(object):

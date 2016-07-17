@@ -16,13 +16,22 @@ class LearningAgent(Agent):
         self.eps = 1 # some % of the time, choose a random action
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         self.possible_actions = [None, 'forward', 'left', 'right']
+        self.possible_waypoints = ['forward', 'left', 'right']
 
+        # Only lights:
         # self.possbible_states = ['red', 'green']
-        # Just an indicator of traffic: true or false.
-        # self.possbible_states = list(iters.product(['red','green'],[True,False]))
-        # All three pathways.
-        self.possbible_states = list(iters.product(['red','green'],[True,False],[True,False],[True,False]))
-        self.gamma = 0.25 # Discount factor
+        # Intersection traffic indicator: true or false.
+        # self.possbible_states = list(iters.product(['red','green'],[True,False],self.possible_waypoints))
+        # More detailed intersection traffic indicator:
+        # self.possbible_states = list(iters.product(['red','green'],[True,False],[True,False],[True,False]))
+        # Full detail:
+        # self.possbible_states = list(iters.product(['red','green'],self.possible_actions,self.possible_actions,self.possible_actions))
+        # Adding waypoints to coarse intersection traffic model:
+        self.possbible_states = list(iters.product(['red','green'],[True,False],[True,False],[True,False],self.possible_waypoints))
+
+        print "Size of state space = {}".format(len(self.possbible_states))
+
+        self.gamma = 0.1 # Discount factor
         self.curr_action = None
         self.qtable = {}
         # Init the qtable values to 0
@@ -35,9 +44,8 @@ class LearningAgent(Agent):
         self.planner.route_to(destination)
         self.trial_num += 1
         self.eps = 1.0 / math.sqrt(self.trial_num)
-        # self.eps -= 0.005
+        self.alpha = 1.0 / math.sqrt(self.trial_num)
         print "*** TRIAL {}, eps={}".format(self.trial_num, self.eps)
-        # print self.qtable
         # print_qtable(self.qtable)
 
     def update(self, t):
@@ -45,11 +53,12 @@ class LearningAgent(Agent):
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
         deadline = self.env.get_deadline(self)
-        alpha = 1.0 / (t + 1)
+        # alpha = 1.0 / (t + 1)
         # print alpha
         # State update:
-        # self.state = update_state_min(inputs)
-        self.state = update_state_fine(inputs)
+        # self.state = update_state_coarse(inputs, self.next_waypoint)
+        self.state = update_state_fine(inputs, self.next_waypoint)
+        # self.state = update_state_full(inputs)
 
         # print "*** Agent state = {}".format(self.state)
 
@@ -68,32 +77,35 @@ class LearningAgent(Agent):
             for i in range(0, len(self.possible_actions)):
                 qVals[i] = self.qtable[(self.state, self.possible_actions[i])]
             action_idx = np.argmax(qVals)
-            # print "== Greedy move: {}".format(self.possible_actions[action_idx])
+            # print "== Greedy move: {} with value = {}".format(self.possible_actions[action_idx], self.qtable[(self.state, self.possible_actions[action_idx])])
             self.curr_action = self.possible_actions[action_idx]
 
         # Execute action and get reward
         reward = self.env.act(self, self.curr_action)
-        # print "*** Agent reward = {}".format(reward)
+        # print "*** Agent reward for {} = {}".format((self.state,self.curr_action),reward)
 
         # Update state *after* the action.
-        # new_state = update_state_coarse(self.env.sense(self))
-        new_state = update_state_fine(self.env.sense(self))
+        # new_state = update_state_coarse(self.env.sense(self), self.next_waypoint)
+        new_state = update_state_fine(self.env.sense(self), self.next_waypoint)
+        # new_state = update_state_full(inputs)
 
+        # print "*** New state after {} = {}".format(self.curr_action, new_state)
         # Update the qtable accordingly
         sa_pair = (self.state, self.curr_action)
         # Q-table UPDATE
-        currQ = self.qtable[sa_pair]
+        Qcurr = self.qtable[sa_pair]
         # Compute max Q over all state, action pairs.
-        qVals = np.zeros(len(self.possible_actions))
+        QMax = -1000.0
         for idx in range(0, len(self.possible_actions)):
-            qVals[idx] = self.qtable[(new_state, self.possible_actions[idx])]
-        maxNextQ = np.amax(qVals)
-        self.qtable[sa_pair] = (1-alpha)*currQ + alpha*(reward + self.gamma*maxNextQ)
+            curr = self.qtable[(new_state, self.possible_actions[idx])]
+            if curr > QMax:
+                QMax = curr
+        # print "Max Next Q = {}".format(QMax)
 
-        # print self.qtable
+        self.qtable[sa_pair] = (1-self.alpha)*Qcurr + self.alpha*(reward + self.gamma*QMax)
         # print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, self.curr_action, reward)  # [debug]
 
-def update_state_coarse(inputs_dict):
+def update_state_coarse(inputs_dict, waypoint):
         new_light = inputs_dict['light']
         has_traffic = False
         if inputs_dict['oncoming'] != None:
@@ -103,9 +115,9 @@ def update_state_coarse(inputs_dict):
         if inputs_dict['right'] != None:
             has_traffic = True
 
-        return (new_light, has_traffic)
+        return (new_light, has_traffic ,waypoint)
 
-def update_state_fine(inputs_dict):
+def update_state_fine(inputs_dict, waypoint):
         new_light = inputs_dict['light']
         new_oncoming = False
         new_left = False
@@ -117,7 +129,16 @@ def update_state_fine(inputs_dict):
         if inputs_dict['right'] != None:
             new_right = True
 
-        return (new_light, new_oncoming, new_left, new_right)
+        return (new_light, new_oncoming, new_left, new_right, waypoint)
+
+def update_state_full(inputs_dict, waypoint):
+        new_light = inputs_dict['light']
+        new_oncoming = inputs_dict['oncoming']
+        new_left = inputs_dict['left']
+        new_right = inputs_dict['right']
+
+        return (new_light, new_oncoming, new_left, new_right, waypoint)
+
 
 def get_qtable(self):
     return self.qtable

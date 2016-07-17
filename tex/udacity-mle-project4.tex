@@ -120,19 +120,19 @@ An open-loop algorithm will clearly not work for this task. \\
 
 The driving agent state should be composed of environment variables that facilitate proper decision making.
 Also, one must balance the information required to solve the problem with the space complexity of the Q-learning algorithm.
-Some input values or implicit states may not be needed, which will create a more efficient learning algorithm.
-I studied the available inputs and decided that the agent state needs \textbf{one} state variable: the value of \verb|light|.
-The other inputs, i.e. \verb|oncoming|, \verb|left|, \verb|right|, are encoded into the reward value when an action is taken.
-For example, if the agent decides to select the \verb|forward| action on a red light, it will be penalized with a value of -1.0.
-Using the state of \verb|light| and the set of possible actions, I construct the following (initial) Q-table:
-\begin{center}
-    \begin{tabular}{| c | c | c | c | c |}
-    \hline
-    \ & \verb|None| & \verb|forward| & \verb|left| & \verb|right| \\ \hline
-    \verb|green| & 0 & 0 & 0 & 0 \\ \hline
-    \verb|red| & 0 & 0 & 0 & 0 \\ \hline
-    \end{tabular}
-\end{center}
+%Some input values or implicit states may not be needed, which will create a more efficient learning algorithm.
+%I studied the available inputs and decided that the agent state needs \textbf{one} state variable: the value of \verb|light|.
+%The other inputs, i.e. \verb|oncoming|, \verb|left|, \verb|right|, are encoded into the reward value when an action is taken.
+%For example, if the agent decides to select the \verb|forward| action on a red light, it will be penalized with a value of -1.0.
+%Using the state of \verb|light| and the set of possible actions, I construct the following (initial) Q-table:
+%\begin{center}
+%    \begin{tabular}{| c | c | c | c | c |}
+%    \hline
+%    \ & \verb|None| & \verb|forward| & \verb|left| & \verb|right| \\ \hline
+%    \verb|green| & 0 & 0 & 0 & 0 \\ \hline
+%    \verb|red| & 0 & 0 & 0 & 0 \\ \hline
+%    \end{tabular}
+%\end{center}
 
 %Additionally, the agent might benefit from memory of its prior actions.
 %My agent state will use a dictionary data structure with the following items:
