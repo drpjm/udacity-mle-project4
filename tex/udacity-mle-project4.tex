@@ -119,9 +119,16 @@ Two out of the five runs completed before the deadline, but it is likely due to 
 An open-loop algorithm will clearly not work for this task. \\
 
 The driving agent state should be composed of environment variables that facilitate proper decision making.
-Also, one must balance the information required to solve the problem with the space complexity of the Q-learning algorithm.
-%Some input values or implicit states may not be needed, which will create a more efficient learning algorithm.
-%I studied the available inputs and decided that the agent state needs \textbf{one} state variable: the value of \verb|light|.
+The chosen state must balance the information required to solve the problem with the space complexity of the Q-learning algorithm.
+Some input data may not be needed, which will create a more efficient learning algorithm. \\
+
+I studied the available agent data and experimented with my implementation of the Q-learning algorithm.
+At a minimum the state should include the intersection light, $\{\verb|green|,\verb|red|\}$, the direction of the next waypoint, $\{\verb|forward|,\verb|left|,\verb|right|\}$.
+I added a new implicit state, the intersection traffic, based on the status of each path available to the agent.
+A full state space would have used all three options for each direction; however, I chose to abstract them as a binary value: $\verb|true| := $ there is a vehicle on that path, $\verb|false|:=$ the path is clear.
+Although I lose some information, the state space would have expanded to 384 states, which would take longer to explore.
+I created the state space by building a Cartesian product in my Python code, \verb|itertools.product()|, resulting in 48 states.
+
 %The other inputs, i.e. \verb|oncoming|, \verb|left|, \verb|right|, are encoded into the reward value when an action is taken.
 %For example, if the agent decides to select the \verb|forward| action on a red light, it will be penalized with a value of -1.0.
 %Using the state of \verb|light| and the set of possible actions, I construct the following (initial) Q-table:
