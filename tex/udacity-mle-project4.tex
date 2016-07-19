@@ -129,6 +129,29 @@ A full state space would have used all three options for each direction; however
 Although I lose some information, the state space would have expanded to 384 states, which would take longer to explore.
 I created the state space by building a Cartesian product in my Python code, \verb|itertools.product()|, resulting in 48 states.
 
+\subsection*{Q-Learning Design and Implementation}
+
+The cornerstone of the Q-learning algorithm is the construction of a {\bf Q-table}, which stores the value of each state-action pair.
+This table starts with all entries at $0.0$.
+Every time the smart cab agent takes an action from a state, it earns a reward from the environment, $R$.
+Q-learning uses this reward and the current Q-table values to compute new values for the next iteration.
+More formally: given current and next states, $s,s'\in S$, an action $a\in \mathcal{A}$, at time step $k$ the estimate of the Q-value, $\tilde{Q}$ is computed by:
+$$
+	\tilde{Q}_{k+1}(s,a) = (1-\alpha_k)\tilde{Q}_{k}(s,a) + \alpha_k[R_k + \gamma \max_{a'\in\mathcal{A}}\tilde{Q}_k(s',a')].
+$$
+This particular form of the algorithm assumes that I am using the adjustable learning rate, $\alpha_k$, given by:
+$$
+	\alpha_{k+1} = \frac{1}{\alpha_k}, \textrm{ with } \alpha_0 = 1.
+$$
+Adopting this learning rate adjustment equation was in class as a strategy to make approximate Q-values converge to their expected value.
+
+The implementation of my Q-table is a dictionary data structure that maps state-action tuples to their Q-value entry. For example, one of my chosen entries in the Q-table would look like:
+\begin{center}
+	\texttt{(('green', False, False, False, 'forward'), 'forward')}
+\end{center}
+that represents an intersection with a green light, no traffic, a waypoint goal that is in front of the cab and the agent takes the \verb|forward| action.
+
+
 %The other inputs, i.e. \verb|oncoming|, \verb|left|, \verb|right|, are encoded into the reward value when an action is taken.
 %For example, if the agent decides to select the \verb|forward| action on a red light, it will be penalized with a value of -1.0.
 %Using the state of \verb|light| and the set of possible actions, I construct the following (initial) Q-table:

@@ -44,7 +44,7 @@ class LearningAgent(Agent):
         self.planner.route_to(destination)
         self.trial_num += 1
         self.eps = 1.0 / math.sqrt(self.trial_num)
-        self.alpha = 1.0 / math.sqrt(self.trial_num)
+        self.alpha = 1.0 / self.trial_num
         print "*** TRIAL {}, eps={}".format(self.trial_num, self.eps)
         # print_qtable(self.qtable)
 
