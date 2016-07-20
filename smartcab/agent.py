@@ -31,7 +31,7 @@ class LearningAgent(Agent):
 
         print "Size of state space = {}".format(len(self.possbible_states))
 
-        self.gamma = 0.1 # Discount factor
+        self.gamma = 0.2 # Discount factor
         self.curr_action = None
         self.qtable = {}
         # Init the qtable values to 0
@@ -43,6 +43,7 @@ class LearningAgent(Agent):
     def reset(self, destination=None):
         self.planner.route_to(destination)
         self.trial_num += 1
+        # Tweak to make exploration last a few more rounds.
         self.eps = 1.0 / math.sqrt(self.trial_num)
         self.alpha = 1.0 / self.trial_num
         print "*** TRIAL {}, eps={}".format(self.trial_num, self.eps)
