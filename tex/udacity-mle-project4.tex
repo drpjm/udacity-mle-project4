@@ -182,12 +182,44 @@ It is clear from the plot that lower $\gamma$ values result in better average su
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.75\textwidth]{SmartCabData.pdf}
+	\includegraphics[width=0.6\textwidth]{SmartCabData.pdf}
 	\caption{This plot shows how the success rate for my learning algorithm depended on $\gamma$. Each data point is the average success rate for 3 simulations runs, where each run had 100 trials.}
 	\label{fig:gammaplot}
 \end{figure}
 
 Using this data, I chose my final discount factor to be $\gamma=0.2$.
 This value, in combination with my $\epsilon$-greedy strategy with ``fading'' $\alpha$, resulted in a smart cab that consistently performs above 90\% for getting to the destination before the deadline.
+Figure \ref{fig:netreward} shows that my algorithm maintains a positive reward after an initial exploration period caused by the $\epsilon$-greedy strategy.\\
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.6\textwidth]{NetReward.pdf}
+	\caption{The data in this plot shows the net reward of the agent over the 100 trials. It consistently scores above $0.0$ after the exploration period.}
+	\label{fig:netreward}
+\end{figure}
+
+
+The optimal policy should always take the direction of the next waypoint, unless there is traffic in that direction or if the traffic light is \verb|red|.
+Performing that action would minimize the distance of the smart cab from the destination.
+If the traffic light is \verb|red| or there is traffic, the agent should take a legal action, such as right turn on red.
+I examined the final Q-tables (after the 100$^{th}$ trial) and sought out some key elements that represent the optimal policy.
+For example, a smart cab with a green light, no traffic, and a waypoint straight ahead should choose \verb|forward|.
+Figure \ref{fig:qtable} shows selected Q-table rows that demonstrate two key examples from the optimal policy.
+In both of these entries, the $\arg \max \tilde{Q}(s,a)$ would result in behavior like the optimal policy.
+\begin{figure}
+\begin{center}
+    \begin{tabular}{| l | c | c | c | c |}
+    \hline
+    \ & \verb|None| & \verb|forward| & \verb|left| & \verb|right| \\ \hline
+    \verb|(red,F,F,F,right)|  &$0.521$ & $-0.419$ & $-0.457$ & $3.537$ \\
+    \verb|(green,F,F,F,forward)|  &$0.647$ & $4.378$ & $-0.269$ & $-0.356$ \\
+    \hline
+    \end{tabular}
+\end{center}
+\caption{Selected results of the final Q-table using my learning algorithm.}
+\label{fig:qtable}
+\end{figure}
+
+
 
 \end{document}

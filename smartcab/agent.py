@@ -1,4 +1,5 @@
 import random
+import csv
 import math
 import itertools as iters
 import numpy as np
@@ -15,6 +16,9 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.eps = 1 # some % of the time, choose a random action
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
+
+        # self.net_reward = 0.0
+
         self.possible_actions = [None, 'forward', 'left', 'right']
         self.possible_waypoints = ['forward', 'left', 'right']
 
@@ -24,7 +28,7 @@ class LearningAgent(Agent):
         # self.possbible_states = list(iters.product(['red','green'],[True,False],self.possible_waypoints))
         # More detailed intersection traffic indicator:
         # self.possbible_states = list(iters.product(['red','green'],[True,False],[True,False],[True,False]))
-        # Full detail:
+        # Full detail: a LOT of states!
         # self.possbible_states = list(iters.product(['red','green'],self.possible_actions,self.possible_actions,self.possible_actions))
         # Adding waypoints to coarse intersection traffic model:
         self.possbible_states = list(iters.product(['red','green'],[True,False],[True,False],[True,False],self.possible_waypoints))
@@ -47,7 +51,13 @@ class LearningAgent(Agent):
         self.eps = 1.0 / math.sqrt(self.trial_num)
         self.alpha = 1.0 / self.trial_num
         print "*** TRIAL {}, eps={}".format(self.trial_num, self.eps)
-        # print_qtable(self.qtable)
+        # print "*** Last net reward = {}".format(self.net_reward)
+        print_qtable(self.qtable)
+        # Write out the net reward for the *last* trial.
+        # f = open('reward.txt', 'a')
+        # f.write(str(self.trial_num) + ',' + str(self.net_reward))
+        # f.write('\n')
+        # self.net_reward = 0.0
 
     def update(self, t):
         # SENSE
@@ -83,14 +93,12 @@ class LearningAgent(Agent):
 
         # Execute action and get reward
         reward = self.env.act(self, self.curr_action)
-        # print "*** Agent reward for {} = {}".format((self.state,self.curr_action),reward)
+        # self.net_reward += reward
 
         # Update state *after* the action.
         # new_state = update_state_coarse(self.env.sense(self), self.next_waypoint)
         new_state = update_state_fine(self.env.sense(self), self.next_waypoint)
-        # new_state = update_state_full(inputs)
 
-        # print "*** New state after {} = {}".format(self.curr_action, new_state)
         # Update the qtable accordingly
         sa_pair = (self.state, self.curr_action)
         # Q-table UPDATE
@@ -101,11 +109,11 @@ class LearningAgent(Agent):
             curr = self.qtable[(new_state, self.possible_actions[idx])]
             if curr > QMax:
                 QMax = curr
-        # print "Max Next Q = {}".format(QMax)
 
         self.qtable[sa_pair] = (1-self.alpha)*Qcurr + self.alpha*(reward + self.gamma*QMax)
         # print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, self.curr_action, reward)  # [debug]
 
+# If any direction has traffic, say it is True - too conservative.
 def update_state_coarse(inputs_dict, waypoint):
         new_light = inputs_dict['light']
         has_traffic = False
@@ -118,6 +126,7 @@ def update_state_coarse(inputs_dict, waypoint):
 
         return (new_light, has_traffic ,waypoint)
 
+# Abstracts traffic in each part of the intersection as "there" or "not there."
 def update_state_fine(inputs_dict, waypoint):
         new_light = inputs_dict['light']
         new_oncoming = False
@@ -132,6 +141,7 @@ def update_state_fine(inputs_dict, waypoint):
 
         return (new_light, new_oncoming, new_left, new_right, waypoint)
 
+# Full detail provided on traffic, not just a binary indicator.
 def update_state_full(inputs_dict, waypoint):
         new_light = inputs_dict['light']
         new_oncoming = inputs_dict['oncoming']
