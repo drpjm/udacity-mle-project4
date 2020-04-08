@@ -33,7 +33,7 @@ class LearningAgent(Agent):
         # Adding waypoints to coarse intersection traffic model:
         self.possbible_states = list(iters.product(['red','green'],[True,False],[True,False],[True,False],self.possible_waypoints))
 
-        print "Size of state space = {}".format(len(self.possbible_states))
+        print("Size of state space = {}".format(len(self.possbible_states)))
 
         self.gamma = 0.2 # Discount factor
         self.curr_action = None
@@ -50,7 +50,7 @@ class LearningAgent(Agent):
         # Tweak to make exploration last a few more rounds.
         self.eps = 1.0 / math.sqrt(self.trial_num)
         self.alpha = 1.0 / self.trial_num
-        print "*** TRIAL {}, eps={}".format(self.trial_num, self.eps)
+        print("*** TRIAL {}, eps={}".format(self.trial_num, self.eps))
         # print "*** Last net reward = {}".format(self.net_reward)
         print_qtable(self.qtable)
         # Write out the net reward for the *last* trial.
@@ -88,7 +88,8 @@ class LearningAgent(Agent):
             for i in range(0, len(self.possible_actions)):
                 qVals[i] = self.qtable[(self.state, self.possible_actions[i])]
             action_idx = np.argmax(qVals)
-            # print "== Greedy move: {} with value = {}".format(self.possible_actions[action_idx], self.qtable[(self.state, self.possible_actions[action_idx])])
+            # print "== Greedy move: {} with value = {}".format(self.possible_actions[action_idx],
+            # self.qtable[(self.state, self.possible_actions[action_idx])])
             self.curr_action = self.possible_actions[action_idx]
 
         # Execute action and get reward
@@ -158,7 +159,7 @@ def print_qtable(qtable):
     qtableStr = ""
     for k,v in qtable.iteritems():
         qtableStr += "{:<20} {:<20}\n".format(k, v)
-    print qtableStr
+    print(qtableStr)
 
 def run():
     """Run the agent for a finite number of trials."""
