@@ -4,13 +4,9 @@ Reinforcement Learning Project
 
 ## Install
 
-This project requires Python 2.7 with the pygame library installed:
+This project requires Python 3 with the pygame library installed:
 
 https://www.pygame.org/wiki/GettingStarted
-
-## Code
-
-Open `smartcab/agent.py` and implement `LearningAgent`. Follow `TODO`s for further instructions.
 
 ## Run
 
