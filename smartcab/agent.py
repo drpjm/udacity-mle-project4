@@ -173,5 +173,3 @@ def run():
     sim = Simulator(e, update_delay=0.1)  # reduce update_delay to speed up simulation
     sim.run(n_trials=10)  # press Esc or close pygame window to quit
 
-if __name__ == '__main__':
-    run()
