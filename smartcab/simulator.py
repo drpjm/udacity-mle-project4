@@ -114,7 +114,7 @@ class Simulator(object):
         for road in self.env.roads:
             self.pygame.draw.line(self.screen, self.road_color, (road[0][0] * self.env.block_size, road[0][1] * self.env.block_size), (road[1][0] * self.env.block_size, road[1][1] * self.env.block_size), self.road_width)
 
-        for intersection, traffic_light in self.env.intersections.iteritems():
+        for intersection, traffic_light in self.env.intersections.items():
             self.pygame.draw.circle(self.screen, self.road_color, (intersection[0] * self.env.block_size, intersection[1] * self.env.block_size), 10)
             if traffic_light.state:  # North-South is open
                 self.pygame.draw.line(self.screen, self.colors['green'],
@@ -126,21 +126,21 @@ class Simulator(object):
                     (intersection[0] * self.env.block_size + 15, intersection[1] * self.env.block_size), self.road_width)
 
         # * Dynamic elements
-        for agent, state in self.env.agent_states.iteritems():
+        for agent, state in self.env.agent_states.items():
             # Compute precise agent location here (back from the intersection some)
             agent_offset = (2 * state['heading'][0] * self.agent_circle_radius, 2 * state['heading'][1] * self.agent_circle_radius)
             agent_pos = (state['location'][0] * self.env.block_size - agent_offset[0], state['location'][1] * self.env.block_size - agent_offset[1])
             agent_color = self.colors[agent.color]
-            if hasattr(agent, '_sprite') and agent._sprite is not None:
-                # Draw agent sprite (image), properly rotated
-                rotated_sprite = agent._sprite if state['heading'] == (1, 0) else self.pygame.transform.rotate(agent._sprite, 180 if state['heading'][0] == -1 else state['heading'][1] * -90)
-                self.screen.blit(rotated_sprite,
-                    self.pygame.rect.Rect(agent_pos[0] - agent._sprite_size[0] / 2, agent_pos[1] - agent._sprite_size[1] / 2,
-                        agent._sprite_size[0], agent._sprite_size[1]))
-            else:
-                # Draw simple agent (circle with a short line segment poking out to indicate heading)
-                self.pygame.draw.circle(self.screen, agent_color, agent_pos, self.agent_circle_radius)
-                self.pygame.draw.line(self.screen, agent_color, agent_pos, state['location'], self.road_width)
+            # if hasattr(agent, '_sprite') and agent._sprite is not None:
+            #     # Draw agent sprite (image), properly rotated
+            #     rotated_sprite = agent._sprite if state['heading'] == (1, 0) else self.pygame.transform.rotate(agent._sprite, 180 if state['heading'][0] == -1 else state['heading'][1] * -90)
+            #     self.screen.blit(rotated_sprite,
+            #         self.pygame.rect.Rect(agent_pos[0] - agent._sprite_size[0] / 2, agent_pos[1] - agent._sprite_size[1] / 2,
+            #             agent._sprite_size[0], agent._sprite_size[1]))
+            # else:
+            # Draw simple agent (circle with a short line segment poking out to indicate heading)
+            self.pygame.draw.circle(self.screen, agent_color, agent_pos, self.agent_circle_radius)
+            # self.pygame.draw.line(self.screen, agent_color, agent_pos, state['location'], self.road_width)
             if agent.get_next_waypoint() is not None:
                 self.screen.blit(self.font.render(agent.get_next_waypoint(), True, agent_color, self.bg_color), (agent_pos[0] + 10, agent_pos[1] + 10))
             if state['destination'] is not None:

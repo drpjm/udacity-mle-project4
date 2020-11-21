@@ -4,7 +4,6 @@ from collections import OrderedDict
 
 import numpy as np
 
-from simulator import Simulator
 
 class TrafficLight(object):
     """A traffic light that switches periodically."""
@@ -49,6 +48,7 @@ class Environment(object):
         self.roads = []
         for x in range(self.bounds[0], self.bounds[2] + 1):
             for y in range(self.bounds[1], self.bounds[3] + 1):
+                # A traffic light key is its x,y position in the environment
                 self.intersections[(x, y)] = TrafficLight()  # a traffic light at each intersection
 
         for a in self.intersections:
@@ -57,6 +57,10 @@ class Environment(object):
                     continue
                 if (abs(a[0] - b[0]) + abs(a[1] - b[1])) == 1:  # L1 distance = 1
                     self.roads.append((a, b))
+
+        for loc, tl in self.intersections.items():
+            tl.reset()
+            print(loc)
 
         # Dummy agents
         self.num_dummies = 3  # no. of dummy agents
@@ -69,7 +73,7 @@ class Environment(object):
 
     def create_agent(self, agent_class, *args, **kwargs):
         agent = agent_class(self, *args, **kwargs)
-        self.agent_states[agent] = {'location': random.choice(self.intersections.keys()), 'heading': (0, 1)}
+        self.agent_states[agent] = {'location': random.choice(list(self.intersections.items())), 'heading': (0, 1)}
         return agent
 
     def set_primary_agent(self, agent, enforce_deadline=False):
@@ -81,40 +85,40 @@ class Environment(object):
         self.t = 0
 
         # Reset traffic lights
-        for traffic_light in self.intersections.itervalues():
+        for _, traffic_light in self.intersections.items():
             traffic_light.reset()
 
         # Pick a start and a destination
-        start = random.choice(self.intersections.keys())
-        destination = random.choice(self.intersections.keys())
+        start = random.choice(list(self.intersections.keys()))
+        destination = random.choice(list(self.intersections.keys()))
 
         # Ensure starting location and destination are not too close
         while self.compute_dist(start, destination) < 4:
-            start = random.choice(self.intersections.keys())
-            destination = random.choice(self.intersections.keys())
+            start = random.choice(list(self.intersections.keys()))
+            destination = random.choice(list(self.intersections.keys()))
 
         start_heading = random.choice(self.valid_headings)
         deadline = self.compute_dist(start, destination) * 5
         print("Environment.reset(): Trial set up with start = {}, destination = {}, deadline = {}".format(start, destination, deadline))
 
         # Initialize agent(s)
-        for agent in self.agent_states.iterkeys():
+        for agent in self.agent_states.keys():
             self.agent_states[agent] = {
-                'location': start if agent is self.primary_agent else random.choice(self.intersections.keys()),
+                'location': start if agent is self.primary_agent else random.choice(list(self.intersections.keys())),
                 'heading': start_heading if agent is self.primary_agent else random.choice(self.valid_headings),
                 'destination': destination if agent is self.primary_agent else None,
                 'deadline': deadline if agent is self.primary_agent else None}
             agent.reset(destination=(destination if agent is self.primary_agent else None))
 
     def step(self):
-        #print "Environment.step(): t = {}".format(self.t)  # [debug]
+        # print("Environment.step(): t = {}".format(self.t))
 
         # Update traffic lights
-        for intersection, traffic_light in self.intersections.iteritems():
+        for _, traffic_light in self.intersections.items():
             traffic_light.update(self.t)
 
         # Update agents
-        for agent in self.agent_states.iterkeys():
+        for agent in self.agent_states.keys():
             agent.update(self.t)
 
         self.t += 1
@@ -141,14 +145,14 @@ class Environment(object):
         oncoming = None
         left = None
         right = None
-        for other_agent, other_state in self.agent_states.iteritems():
+        for other_agent, other_state in self.agent_states.items():
             if agent == other_agent or location != other_state['location'] or (heading[0] == other_state['heading'][0] and heading[1] == other_state['heading'][1]):
                 continue
             other_heading = other_agent.get_next_waypoint()
             if (heading[0] * other_state['heading'][0] + heading[1] * other_state['heading'][1]) == -1:
                 if oncoming != 'left':  # we don't want to override oncoming == 'left'
                     oncoming = other_heading
-            elif (heading[1] == other_state['heading'][0] and -heading[0] == other_state['heading'][1]):
+            elif heading[1] == other_state['heading'][0] and -heading[0] == other_state['heading'][1]:
                 if right != 'forward' and right != 'left':  # we don't want to override right == 'forward or 'left'
                     right = other_heading
             else:
@@ -273,5 +277,3 @@ class DummyAgent(Agent):
             action = self.next_waypoint
             self.next_waypoint = random.choice(Environment.valid_actions[1:])
         reward = self.env.act(self, action)
-        #print "DummyAgent.update(): t = {}, inputs = {}, action = {}, reward = {}".format(t, inputs, action, reward)  # [debug]
-        #print "DummyAgent.update(): next_waypoint = {}".format(self.next_waypoint)  # [debug]

@@ -3,9 +3,9 @@ import csv
 import math
 import itertools as iters
 import numpy as np
-from environment import Agent, Environment
-from planner import RoutePlanner
-from simulator import Simulator
+from smartcab.environment import Agent, Environment
+from smartcab.planner import RoutePlanner
+from smartcab.simulator import Simulator
 
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
@@ -52,7 +52,7 @@ class LearningAgent(Agent):
         self.alpha = 1.0 / self.trial_num
         print("*** TRIAL {}, eps={}".format(self.trial_num, self.eps))
         # print "*** Last net reward = {}".format(self.net_reward)
-        print_qtable(self.qtable)
+#        print_qtable(self.qtable)
         # Write out the net reward for the *last* trial.
         # f = open('reward.txt', 'a')
         # f.write(str(self.trial_num) + ',' + str(self.net_reward))
@@ -170,8 +170,8 @@ def run():
     e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.01)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=100)  # press Esc or close pygame window to quit
+    sim = Simulator(e, update_delay=0.1)  # reduce update_delay to speed up simulation
+    sim.run(n_trials=10)  # press Esc or close pygame window to quit
 
 if __name__ == '__main__':
     run()
