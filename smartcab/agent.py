@@ -6,6 +6,7 @@ import numpy as np
 from smartcab.environment import Agent, Environment
 from smartcab.planner import RoutePlanner
 from smartcab.simulator import Simulator
+import numpy as np
 
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
@@ -38,6 +39,7 @@ class LearningAgent(Agent):
         self.gamma = 0.2 # Discount factor
         self.curr_action = None
         self.qtable = {}
+        self.reward_history = []
         # Init the qtable values to 0
         for s in self.possbible_states:
             for a in self.possible_actions:
@@ -52,7 +54,9 @@ class LearningAgent(Agent):
         self.alpha = 1.0 / self.trial_num
         print("*** TRIAL {}, eps={}".format(self.trial_num, self.eps))
         # print "*** Last net reward = {}".format(self.net_reward)
-#        print_qtable(self.qtable)
+        # print_qtable(self.qtable)
+        # avg_reward = np.average(np.array(self.reward_history)) if len(self.reward_history) > 0 else "None"
+        # print("*** Average Reward = {0}".format(avg_reward))
         # Write out the net reward for the *last* trial.
         # f = open('reward.txt', 'a')
         # f.write(str(self.trial_num) + ',' + str(self.net_reward))
@@ -94,6 +98,7 @@ class LearningAgent(Agent):
 
         # Execute action and get reward
         reward = self.env.act(self, self.curr_action)
+        self.reward_history.append(reward)
         # self.net_reward += reward
 
         # Update state *after* the action.
@@ -156,12 +161,13 @@ def get_qtable(self):
     return self.qtable
 
 def print_qtable(qtable):
+    # print("Size: {0}".format(len(qtable)))
     qtableStr = ""
-    for k,v in qtable.iteritems():
-        qtableStr += "{:<20} {:<20}\n".format(k, v)
+    for k,v in qtable.items():
+        qtableStr += "{0} {1}\n".format(k, v)
     print(qtableStr)
 
-def run():
+def run(n_trials=20, delta_t=0.1, enforce_deadline=True):
     """Run the agent for a finite number of trials."""
 
     # Set up environment and agent
@@ -170,6 +176,6 @@ def run():
     e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.1)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=10)  # press Esc or close pygame window to quit
+    sim = Simulator(e, update_delay=delta_t)  # reduce update_delay to speed up simulation
+    sim.run(n_trials=n_trials)  # press Esc or close pygame window to quit
 

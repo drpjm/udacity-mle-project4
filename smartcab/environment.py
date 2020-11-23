@@ -58,9 +58,8 @@ class Environment(object):
                 if (abs(a[0] - b[0]) + abs(a[1] - b[1])) == 1:  # L1 distance = 1
                     self.roads.append((a, b))
 
-        for loc, tl in self.intersections.items():
+        for _, tl in self.intersections.items():
             tl.reset()
-            print(loc)
 
         # Dummy agents
         self.num_dummies = 3  # no. of dummy agents
